@@ -1001,37 +1001,89 @@ Respond in 60-100 words with personality and humor.
 IMPORTANT: Output ONLY valid JSON:
 {"response": "your character's response here"}`;
 
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "API_KEY"
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        max_tokens: 1000,
-                        messages: [
-                            { role: "user", content: prompt }
-                        ]
-                    })
-                });
-                
-                const data = await response.json();
-                
-                try {
-                    let responseTextRaw = data.content[0].text;
-                    responseTextRaw = responseTextRaw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-                    const parsed = JSON.parse(responseTextRaw);
-                    responseText = parsed.response;
-                } catch (parseError) {
-                    console.warn('JSON parsing failed, using fallback');
-                    responseText = generateFallbackResponse(currentCharacter, option);
-                }
-                
-            } catch (error) {
-                console.error('API Error:', error);
-                responseText = generateFallbackResponse(currentCharacter, option);
-            }
+<script>
+async function selectOption(option) {
+    if (!currentCharacter) return;
+    
+    dialogueContent.innerHTML += `<p><strong>You:</strong> ${option}</p>`;
+    dialogueContent.innerHTML += `<p><strong>${currentCharacter.userData.name}:</strong> <span class="loading"></span></p>`;
+    dialogueContent.scrollTop = dialogueContent.scrollHeight;
+
+    const customQuestionInput = document.getElementById('custom-question-input');
+    const customQuestionSubmit = document.getElementById('custom-question-submit');
+
+    dialogueOptions.style.pointerEvents = 'none';
+    dialogueOptions.style.opacity = '0.5';
+    customQuestionInput.disabled = true;
+    customQuestionSubmit.disabled = true;
+
+    let responseText = "";
+
+    try {
+        const prompt = `You are roleplaying as ${currentCharacter.userData.name}, ${currentCharacter.userData.role} on a legal technology team.
+Character traits: ${currentCharacter.userData.personality}, ${currentCharacter.userData.quirk}
+User question: "${option}"
+
+${currentCharacter.userData.isBaby ? 
+'You are a baby. Respond with baby talk, random syllables, and describe cute baby actions. Include emojis. Make it adorable and silly.' :
+'You are a legal technology expert. Provide helpful, practical advice about legal tech tools, workflows, automation, AI in legal practice, and implementation strategies. Be friendly, knowledgeable, and reference your quirk naturally. Focus on real-world applications.'}
+
+${currentCharacter.userData.name === 'Tina Lepomme' ? 'IMPORTANT: End your entire response with "thanks." (lowercase t) - this is your signature sign-off.' : ''}
+
+${option.length > 50 ? 'This is a custom question from the user, so be creative and stay in character!' : ''}
+
+Respond in 60-100 words with personality and humor.`
+
+        // ✅ Send prompt to your Hugging Face Space securely
+        const response = await fetch("https://esth21-ltcgame.hf.space/api/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: [prompt] })
+        });
+
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+        const data = await response.json();
+        responseText = data?.data?.[0] || "(No response received)";
+    } catch (error) {
+        console.error("AI Error:", error);
+        responseText = generateFallbackResponse(currentCharacter, option);
+    }
+
+    currentCharacter.userData.conversations.push({
+        user: option,
+        response: responseText
+    });
+
+    dialogueContent.innerHTML = dialogueContent.innerHTML.replace(
+        '<span class="loading"></span>',
+        responseText
+    );
+
+    dialogueContent.scrollTop = dialogueContent.scrollHeight;
+
+    if (Math.random() < 0.2) {
+        createFloatingText('💡', currentCharacter.position);
+    }
+
+    const newOptions = generateDialogueOptions(currentCharacter);
+    dialogueOptions.innerHTML = '';
+
+    newOptions.forEach(opt => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'dialogue-option';
+        optionDiv.textContent = opt;
+        optionDiv.onclick = () => selectOption(opt);
+        dialogueOptions.appendChild(optionDiv);
+    });
+
+    dialogueOptions.style.pointerEvents = 'auto';
+    dialogueOptions.style.opacity = '1';
+    customQuestionInput.disabled = false;
+    customQuestionSubmit.disabled = false;
+    customQuestionInput.focus();
+}
+</script>
             
             currentCharacter.userData.conversations.push({
                 user: option,
