@@ -1001,13 +1001,14 @@ Respond in 60-100 words with personality and humor.
 IMPORTANT: Output ONLY valid JSON:
 {"response": "your character's response here"}`;
 
-                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "Authorization": "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"
                     },
                     body: JSON.stringify({
-                        model: "claude-sonnet-4-20250514",
+                        model: "gpt-4o-mini",
                         max_tokens: 1000,
                         messages: [
                             { role: "user", content: prompt }
