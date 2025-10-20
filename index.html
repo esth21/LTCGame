@@ -673,7 +673,7 @@
         const tina = createCharacter('Tina Lepomme', 'Senior Legal Technologist', -10, 5, 0x228b22, {
             hairColor: 0xffeb3b,
             personality: 'analytical and concise',
-            quirk: 'always ends her responses with "thanks." (lowercase) as her signature sign-off'
+            quirk: 'always ends her responses with "Thanks." as her signature sign-off'
         });
         
         const jodie = createCharacter('Jodie Pickering', 'Senior Legal Technologist', 10, 5, 0xff6347, {
@@ -996,31 +996,27 @@ ${currentCharacter.userData.name === 'Tina Lepomme' ? 'IMPORTANT: End your entir
 
 ${option.length > 50 ? 'This is a custom question from the user, so be creative and stay in character!' : ''}
 
-Respond in 60-100 words with personality and humor.`;
+Respond in 60-100 words with personality and humor.
 
-                // ====== NEW: call your Hugging Face Space securely ======
-                console.debug("[AI] Sending prompt to HF Space…");
-                const response = await fetch("https://esth21-ltcgame.hf.space/api/predict", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        data: [prompt]
-                    })
-                });
+IMPORTANT: Output ONLY valid JSON:
+{"response": "your character's response here"}`;
 
-                if (!response.ok) {
-                    throw new Error(`Proxy error: ${response.status}`);
-                }
+// NEW: Hugging Face FastAPI + OpenAI proxy version
+try {
+    const response = await fetch("https://esth21-LTCSimulator.hf.space/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            user_message: option,
+            character: currentCharacter.userData
+        }),
+    });
 
-                const data = await response.json();
-                console.debug("[AI] HF response:", data);
-                // Gradio returns { data: [ "<model text>" ] }
-                responseText = (data && Array.isArray(data.data)) ? data.data[0] : "(no response)";
-                if (!responseText) responseText = "(no response)";
-                // ====== end new block ======
-
+    const data = await response.json();
+    responseText = data.response || "Hmm... that’s one I’ll need to check and 'circle back' on!";
+                
             } catch (error) {
                 console.error('API Error:', error);
                 responseText = generateFallbackResponse(currentCharacter, option);
@@ -1087,10 +1083,10 @@ Respond in 60-100 words with personality and humor.`;
                     'When lawyers resist new tech, I remind them: "The old ways won\'t open new doors." We\'re writing our own success story, one automation at a time! 🎵'
                 ],
                 'Tina Lepomme': [
-                    'Let me break this down: identify the problem, analyze root causes, implement solution, test thoroughly. Edge cases are where systems break, so we focus on comprehensive testing before deployment. Documentation is critical throughout. thanks.',
-                    'The key with legal tech is attention to detail. We test everything systematically before rollout. Debugging requires thinking like both a developer and a lawyer simultaneously - it\'s methodical work that pays off. thanks.',
-                    'My approach is systematic: structured analysis, clear documentation, comprehensive testing. This process keeps things running smoothly and helps us catch issues before they become problems. thanks.',
-                    'Legal tech debugging is fascinating work. You need to understand both technical architecture and legal workflows. When you combine those perspectives, solutions become much clearer and more robust. thanks.'
+                    'Let me break this down: identify the problem, analyze root causes, implement solution, test thoroughly. Edge cases are where systems break, so we focus on comprehensive testing before deployment. Documentation is critical throughout. Thanks.',
+                    'The key with legal tech is attention to detail. We test everything systematically before rollout. Debugging requires thinking like both a developer and a lawyer simultaneously - it\'s methodical work that pays off. Thanks.',
+                    'My approach is systematic: structured analysis, clear documentation, comprehensive testing. This process keeps things running smoothly and helps us catch issues before they become problems. Thanks.',
+                    'Legal tech debugging is fascinating work. You need to understand both technical architecture and legal workflows. When you combine those perspectives, solutions become much clearer and more robust. Thanks.'
                 ],
                 'Jodie Pickering': [
                     'This implementation? It\'s like BASE jumping - thrilling, requires preparation, and when it works perfectly, it\'s absolutely exhilarating!',
@@ -1275,7 +1271,6 @@ Respond in 60-100 words with personality and humor.`;
             }
         });
         
-        console.debug("[LTCGame] Scene booting...");
         animate(0);
     </script>
 </body>
