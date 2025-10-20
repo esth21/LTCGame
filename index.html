@@ -225,6 +225,16 @@
             setTimeout(() => div.remove(), 2000);
         }
         
+        // 🧠 Typing effect for character dialogue
+        async function typeText(element, text, delay = 20) {
+        element.innerHTML = ""; // Clear old text
+        for (let i = 0; i < text.length; i++) {
+            element.innerHTML += text.charAt(i);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            element.scrollTop = element.scrollHeight; // Keep scroll at bottom
+            }
+        }
+
         // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
@@ -691,7 +701,7 @@
         const sajj = createCharacter('Sajj Haider', 'Legal Technologist', 5, 0, 0x20b2aa, {
             hairColor: 0xf0f0f0,
             personality: 'pragmatic and caffeine-powered',
-            quirk: 'solves problems between coffee breaks, measures productivity in espresso shots'
+            quirk: 'balances dry humour and internet meme references with genuinely helpful advice; often frames complex legal tech issues as memes before explaining them seriously'
         });
         
         const baby = createBaby('Baby', 0, -15);
@@ -1022,10 +1032,12 @@
         response: responseText
     });
     
-    dialogueContent.innerHTML = dialogueContent.innerHTML.replace(
-        '<span class="loading"></span>',
-        responseText
-    );
+    const loadingSpan = dialogueContent.querySelector(".loading");
+if (loadingSpan) {
+    const container = document.createElement("span");
+    loadingSpan.replaceWith(container);
+    await typeText(container, responseText, 20); // Typing speed (ms per char)
+}
     
     dialogueContent.scrollTop = dialogueContent.scrollHeight;
     
@@ -1096,10 +1108,9 @@
                     'The most interesting bugs are the ones nobody expected. That\'s where you learn the most about how systems actually work versus how you think they work!'
                 ],
                 'Sajj Haider': [
-                    'Let me grab my third espresso and I\'ll explain... *sips coffee* Okay, so the elegant solution here is to automate the entire workflow.',
-                    'Coffee-fueled pragmatism is my approach. Why spend hours on manual work when you can automate it in less time than it takes to brew a pot?',
-                    'I measure project complexity in cups of coffee required. This one? Definitely a four-shot problem. Let\'s get caffeinated and solve it!',
-                    'Best technical solutions come to me around my second coffee. By the fourth, I\'ve already implemented it. Efficiency meets caffeine! ☕'
+                    'Legal tech problems? Easy. Step 1: turn it into a meme. Step 2: fix it. Step 3: sip coffee while pretending it was easy. ☕',
+                    'Honestly, automation isn’t just about saving time—it’s about saving brain cells for when you actually need to think. Meme it, automate it, move on.',
+                    'Picture your workflow as a meme template: we identify the punchline (the inefficiency), then redesign it so the joke lands every time.','The secret? Marry practicality with humour. I use memes to make lawyers laugh *and* understand why process automation matters. Keeps everyone awake—no espresso required (okay, maybe one).'
                 ]
             };
             
